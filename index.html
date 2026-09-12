@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipVault — Instant Video & Evidence Sharing</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        retro: {
+                            900: '#0a0915',
+                            800: '#131127',
+                            700: '#1e1b3d',
+                            600: '#2d275e',
+                            accent: '#f43f5e', // Rose/Neon pink
+                            neon: '#06b6d4',   // Cyan
+                            purple: '#8b5cf6',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0915;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2d275e;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6;
+        }
+        .glass-panel {
+            background: rgba(19, 17, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+        }
+        .neon-glow {
+            box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25), 0 0 15px -5px rgba(244, 63, 94, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-retro-900 text-slate-100 min-h-screen font-sans antialiased selection:bg-retro-accent selection:text-white flex flex-col justify-between">
+
+    <header class="w-full border-b border-retro-700/50 bg-retro-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateToDashboard()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-retro-accent to-retro-neon flex items-center justify-center neon-glow">
+                    <i class="fa-solid fa-clapperboard text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold tracking-wider text-lg bg-gradient-to-r from-retro-neon via-retro-purple to-retro-accent bg-clip-text text-transparent">
+                        CLIP<span class="text-white">VAULT</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 font-mono">clip.lawsonmorris.uk</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <div class="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-slate-400 text-xs font-mono flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>Ready</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- VIEW 1: UPLOADER DASHBOARD -->
+        <div id="dashboardView" class="space-y-6">
+            <div class="glass-panel rounded-2xl p-6 sm:p-8 relative overflow-hidden neon-glow">
+                <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-retro-neon/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-10 -top-10 w-60 h-60 bg-retro-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="relative z-10 max-w-2xl">
+                    <span class="px-3 py-1 rounded-full bg-retro-accent/20 text-retro-accent text-xs font-semibold uppercase tracking-widest border border-retro-accent/30 inline-block mb-3">
+                        Instant Report Clipper
+                    </span>
+                    <h2 class="text-2xl sm:text-4xl font-bold tracking-tight text-white mb-2">
+                        Upload & Share Evidence to Cloud
+                    </h2>
+                    <p class="text-slate-300 text-sm sm:text-base mb-6">
+                        Instantly store Roblox reports, bugs, or epic gameplay on Supabase and share permanent links via <code class="text-retro-neon font-mono bg-retro-800 px-2 py-0.5 rounded">clip.lawsonmorris.uk</code>.
+                    </p>
+                </div>
+
+                <!-- Uploader Form -->
+                <form id="uploadForm" onsubmit="handleUpload(event)" class="mt-6 space-y-5 bg-retro-800/80 p-5 sm:p-6 rounded-xl border border-retro-700/60 shadow-xl">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                            <i class="fa-solid fa-file-video text-retro-neon mr-1.5"></i> Video Clip (.mp4, .mov, .webm)
+                        </label>
+                        <div id="dropzone" class="border-2 border-dashed border-retro-600/60 hover:border-retro-neon/80 rounded-xl p-6 text-center cursor-pointer transition bg-retro-900/40 group relative">
+                            <input type="file" id="clipFile" accept="video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required onchange="handleFileSelect(this)">
+                            <div id="dropzoneContent" class="space-y-2 pointer-events-none">
+                                <div class="w-12 h-12 rounded-full bg-retro-700/60 text-retro-neon mx-auto flex items-center justify-center group-hover:scale-110 transition duration-300">
+                                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                                </div>
+                                <p class="text-sm font-medium text-slate-200">Drag & drop clip here, or <span class="text-retro-neon underline">browse files</span></p>
+                                <p class="text-xs text-slate-400">Supports MP4, MOV, WEBM up to 100MB</p>
+                            </div>
+                            <div id="fileSelectedInfo" class="hidden items-center justify-center space-x-3 text-emerald-400">
+                                <i class="fa-solid fa-circle-check text-2xl"></i>
+                                <div class="text-left">
+                                    <p id="selectedFileName" class="text-sm font-semibold text-white truncate max-w-xs">filename.mp4</p>
+                                    <p id="selectedFileSize" class="text-xs text-slate-400">0 MB</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                                <i class="fa-solid fa-gamepad text-retro-purple mr-1.5"></i> Game Title
+                            </label>
+                            <input type="text" id="gameTitle" placeholder="e.g. Roblox: Arsenal / Jailbreak" class="w-full bg-retro-900/80 border border-retro-700 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-retro-neon transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                                <i class="fa-solid fa-server text-retro-accent mr-1.5"></i> Server ID / Region
+                            </label>
+                            <input type="text" id="serverId" placeholder="e.g. #US-EAST-9482" class="w-full bg-retro-900/80 border border-retro-700 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-retro-neon transition" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                            <i class="fa-solid fa-note-sticky text-amber-400 mr-1.5"></i> Report Notes / Context (Optional)
+                        </label>
+                        <textarea id="clipNotes" rows="2" placeholder="Describe what happened in the clip..." class="w-full bg-retro-900/80 border border-retro-700 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-retro-neon transition resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" id="generateBtn" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-retro-neon via-retro-purple to-retro-accent text-white font-bold text-sm tracking-wide uppercase shadow-lg shadow-retro-purple/20 hover:opacity-95 transform active:scale-[0.99] transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Upload to Supabase & Generate Link</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- VIEW 2: CLIP VIEWER / PLAYER -->
+        <div id="viewerModal" class="hidden space-y-6">
+            <button onclick="navigateToDashboard()" class="px-4 py-2 rounded-xl bg-retro-800 hover:bg-retro-700 border border-retro-700/60 text-xs font-semibold text-slate-300 transition flex items-center space-x-2">
+                <i class="fa-solid fa-arrow-left text-retro-neon"></i>
+                <span>Back to Uploader</span>
+            </button>
+
+            <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl border border-retro-700/80">
+                <div class="relative bg-black w-full aspect-video flex items-center justify-center">
+                    <video id="viewerVideo" controls class="w-full h-full object-contain" poster="https://placehold.co/1280x720/131127/06b6d4?text=Loading+Cloud+Clip...">
+                        Your browser does not support video playback.
+                    </video>
+                </div>
+
+                <div class="p-6 sm:p-8 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-retro-700/60">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span id="viewGameBadge" class="px-3 py-1 rounded-full bg-retro-purple/20 text-retro-purple text-xs font-bold uppercase tracking-wider border border-retro-purple/30">
+                                    Roblox
+                                </span>
+                                <span id="viewServerBadge" class="px-3 py-1 rounded-full bg-retro-neon/10 text-retro-neon text-xs font-mono border border-retro-neon/20">
+                                    Server: #0000
+                                </span>
+                            </div>
+                            <h2 id="viewTitle" class="text-xl sm:text-2xl font-extrabold text-white">
+                                Clip Report #loading
+                            </h2>
+                            <p id="viewTimestamp" class="text-xs text-slate-400 mt-1">
+                                Uploaded to Cloud • LawsonMorris.uk
+                            </p>
+                        </div>
+
+                        <div class="flex items-center space-x-3">
+                            <button onclick="copyCurrentLink()" class="px-4 py-2.5 rounded-xl bg-retro-700 hover:bg-retro-600 text-white text-xs font-semibold transition flex items-center space-x-2 border border-retro-600/50">
+                                <i class="fa-solid fa-copy text-retro-neon"></i>
+                                <span>Copy Link</span>
+                            </button>
+                            <a id="downloadBtn" href="#" download="clip.mp4" class="px-4 py-2.5 rounded-xl bg-retro-accent hover:bg-rose-600 text-white text-xs font-semibold transition flex items-center space-x-2 shadow-lg shadow-retro-accent/20">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Download</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="notesContainer" class="bg-retro-900/60 rounded-xl p-4 border border-retro-700/40">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center">
+                            <i class="fa-solid fa-note-sticky text-amber-400 mr-2"></i> Report Description / Notes
+                        </h4>
+                        <p id="viewNotesText" class="text-sm text-slate-200 whitespace-pre-wrap">No additional notes provided.</p>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-retro-700/30">
+                        <span>Built for Lawson Morris</span>
+                        <span class="font-mono text-retro-neon">clip.lawsonmorris.uk</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="successModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel max-w-md w-full rounded-2xl p-6 sm:p-8 space-y-6 border border-retro-neon/40 shadow-2xl">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/30 text-2xl">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Uploaded to Cloud Successfully!</h3>
+                <p class="text-xs text-slate-400">Your permanent custom link is ready to send to Discord or reviewers.</p>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Shareable Cloud URL</label>
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="generatedLinkInput" readonly class="w-full bg-retro-900 border border-retro-700 rounded-lg px-3.5 py-2.5 text-xs text-retro-neon font-mono select-all focus:outline-none">
+                    <button onclick="copyGeneratedLink()" class="px-4 py-2.5 rounded-lg bg-retro-neon text-retro-900 font-bold text-xs hover:bg-cyan-400 transition flex items-center space-x-1 shrink-0">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>Copy</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 pt-2">
+                <button onclick="viewCreatedClip()" class="flex-1 py-3 rounded-xl bg-retro-purple hover:bg-purple-600 text-white font-bold text-xs uppercase tracking-wider transition">
+                    View Clip Page
+                </button>
+                <button onclick="closeSuccessModal()" class="px-4 py-3 rounded-xl bg-retro-800 hover:bg-retro-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="w-full border-t border-retro-700/40 bg-retro-900/60 py-6 mt-12 text-center text-xs text-slate-500">
+        <p>Built for Lawson Morris</p>
+    </footer>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        let selectedFileObj = null;
+        let currentActiveId = null;
+        let supabaseClient = null;
+
+        const SUPABASE_URL = 'https://lleatdcrqkxwjonqbuve.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_3-Lzu4hNnZOUx0QfYwRJPQ_-hbDD0eV';
+
+        function initSupabase() {
+            try {
+                supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+            } catch(e) {
+                console.error("Supabase init error:", e);
+            }
+        }
+
+        window.handleFileSelect = function(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.size > 100 * 1024 * 1024) {
+                showToast("File is too large! Max size is 100MB.", "error");
+                input.value = "";
+                return;
+            }
+
+            document.getElementById('dropzoneContent').classList.add('hidden');
+            const infoDiv = document.getElementById('fileSelectedInfo');
+            infoDiv.classList.remove('hidden');
+            infoDiv.classList.add('flex');
+            
+            document.getElementById('selectedFileName').textContent = file.name;
+            document.getElementById('selectedFileSize').textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            selectedFileObj = file;
+        }
+
+        window.handleUpload = async function(event) {
+            event.preventDefault();
+
+            if (!supabaseClient) {
+                showToast("Cloud connection error.", "error");
+                return;
+            }
+
+            if (!selectedFileObj) {
+                showToast("Please select a video file to upload.", "error");
+                return;
+            }
+
+            const gameTitle = document.getElementById('gameTitle').value.trim();
+            const serverId = document.getElementById('serverId').value.trim();
+            const notes = document.getElementById('clipNotes').value.trim();
+
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>Uploading to Supabase...</span>';
+
+            try {
+                const randomId = Math.random().toString(36).substring(2, 8);
+                const safeFileName = `${randomId}_${selectedFileObj.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
+
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from('clips')
+                    .upload(safeFileName, selectedFileObj);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabaseClient.storage
+                    .from('clips')
+                    .getPublicUrl(safeFileName);
+
+                const { error: dbError } = await supabaseClient
+                    .from('clips')
+                    .insert([{
+                        id: randomId,
+                        game: gameTitle,
+                        server: serverId,
+                        notes: notes,
+                        video_url: publicUrl,
+                        filename: selectedFileObj.name
+                    }]);
+
+                if (dbError) throw dbError;
+
+                currentActiveId = randomId;
+                const shareableLink = `${window.location.origin}${window.location.pathname}#${randomId}`;
+                document.getElementById('generatedLinkInput').value = shareableLink;
+                
+                document.getElementById('successModal').classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                showToast("Upload failed: " + (err.message || "Check storage bucket & table setup"), "error");
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>Upload to Supabase & Generate Link</span>';
+            }
+        }
+
+        window.closeSuccessModal = function() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        window.viewCreatedClip = function() {
+            closeSuccessModal();
+            window.location.hash = `#${currentActiveId}`;
+            checkUrlHash();
+        }
+
+        window.navigateToDashboard = function() {
+            window.location.hash = '';
+            document.getElementById('viewerModal').classList.add('hidden');
+            document.getElementById('dashboardView').classList.remove('hidden');
+            document.getElementById('uploadForm').reset();
+            document.getElementById('dropzoneContent').classList.remove('hidden');
+            document.getElementById('fileSelectedInfo').classList.add('hidden');
+            document.getElementById('fileSelectedInfo').classList.remove('flex');
+            selectedFileObj = null;
+        }
+
+        async function checkUrlHash() {
+            const hash = window.location.hash.replace('#', '');
+            if (!hash) {
+                navigateToDashboard();
+                return;
+            }
+
+            if (!supabaseClient) {
+                showToast("Cloud connection error.", "error");
+                return;
+            }
+
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('viewerModal').classList.remove('hidden');
+            document.getElementById('viewTitle').textContent = `Clip Report #${hash}`;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('clips')
+                    .select('*')
+                    .eq('id', hash)
+                    .single();
+
+                if (error || !data) {
+                    showToast("Clip not found in cloud database.", "error");
+                    return;
+                }
+
+                document.getElementById('viewTitle').textContent = `Clip Report #${data.id}`;
+                document.getElementById('viewGameBadge').textContent = data.game;
+                document.getElementById('viewServerBadge').textContent = `Server: ${data.server}`;
+                document.getElementById('viewTimestamp').textContent = `Uploaded on ${new Date(data.created_at).toLocaleDateString()} • clip.lawsonmorris.uk/${data.id}`;
+
+                const notesEl = document.getElementById('viewNotesText');
+                if (data.notes) {
+                    notesEl.textContent = data.notes;
+                    document.getElementById('notesContainer').classList.remove('hidden');
+                } else {
+                    document.getElementById('notesContainer').classList.add('hidden');
+                }
+
+                const videoEl = document.getElementById('viewerVideo');
+                videoEl.src = data.video_url;
+                videoEl.load();
+
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.href = data.video_url;
+                downloadBtn.download = data.filename || 'clipvault.mp4';
+
+            } catch (err) {
+                console.error(err);
+                showToast("Error loading clip from cloud.", "error");
+            }
+        }
+
+        window.copyGeneratedLink = function() {
+            const input = document.getElementById('generatedLinkInput');
+            input.select();
+            document.execCommand('copy');
+            showToast("Cloud link copied to clipboard!", "success");
+        }
+
+        window.copyCurrentLink = function() {
+            const dummy = document.createElement('textarea');
+            document.body.appendChild(dummy);
+            dummy.value = window.location.href;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            showToast("Clip link copied to clipboard!", "success");
+        }
+
+        function showToast(message, type = 'success') {
+            const existing = document.getElementById('retroToast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'retroToast';
+            toast.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold flex items-center space-x-2 border ${
+                type === 'success' 
+                    ? 'bg-retro-800 text-emerald-400 border-emerald-500/30' 
+                    : 'bg-retro-800 text-rose-400 border-rose-500/30'
+            }`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.addEventListener('load', () => {
+            initSupabase();
+            checkUrlHash();
+        });
+        window.addEventListener('hashchange', checkUrlHash);
+    </script>
+</body>
+</html>
